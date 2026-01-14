@@ -9,7 +9,10 @@ import {
   Rocket, 
   Truck, 
   RotateCcw,
-  Settings
+  Settings,
+  FileText,
+  Download,
+  BarChart3
 } from 'lucide-react'
 
 const menuItems = [
@@ -22,6 +25,9 @@ const menuItems = [
   { href: '/lancamentos', label: 'Lançamentos', icon: Rocket },
   { href: '/entregas', label: 'Entregas', icon: Truck },
   { href: '/retornos', label: 'Retornos', icon: RotateCcw },
+  { href: '/relatorios', label: 'Relatórios', icon: FileText },
+  { href: '/exportar', label: 'Exportar Dados', icon: Download },
+  { href: '/analytics', label: 'Análises', icon: BarChart3 },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
