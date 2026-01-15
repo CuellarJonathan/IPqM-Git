@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState } from 'react'
@@ -10,20 +9,26 @@ import Link from 'next/link'
 export default function NewLancamentoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({})
+  const [formData, setFormData] = useState({
+    numero_lancamento: '',
+    descricao: ''
+  })
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
       const { error } = await supabase
         .from('lancamentos')
-        .insert([formData])
+        .insert([{
+          numero_lancamento: parseInt(formData.numero_lancamento),
+          descricao: formData.descricao
+        }])
       if (error) throw error
       router.push('/lancamentos')
       router.refresh()
@@ -38,15 +43,12 @@ export default function NewLancamentoPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link
-          href="/lancamentos"
-          className="p-2 rounded-lg hover:bg-gray-100"
-        >
+        <Link href="/lancamentos" className="p-2 rounded-lg hover:bg-gray-100">
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Novo lancamento</h1>
-          <p className="text-gray-600">Preencha os dados para criar um novo lancamento</p>
+          <h1 className="text-3xl font-bold text-gray-900">Novo Lançamento</h1>
+          <p className="text-gray-600">Preencha os dados para criar um novo lançamento</p>
         </div>
       </div>
 
@@ -54,42 +56,31 @@ export default function NewLancamentoPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Número de Série
+              Número do Lançamento
             </label>
             <input
-              type="text"
-              name="numero_serie"
+              type="number"
+              name="numero_lancamento"
               required
+              min="1"
+              value={formData.numero_lancamento}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Versão
+              Descrição
             </label>
-            <input
-              type="text"
-              name="versao"
-              required
+            <textarea
+              name="descricao"
+              rows={3}
+              value={formData.descricao}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Descreva o propósito ou detalhes do lançamento"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data de Fabricação
-            </label>
-            <input
-              type="date"
-              name="data_fabricacao"
-              required
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          
         </div>
 
         <div className="flex justify-end gap-4 pt-6 border-t">

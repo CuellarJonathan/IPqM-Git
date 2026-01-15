@@ -5,26 +5,24 @@ import { supabase } from '@/lib/supabaseClient'
 import { Plus, Eye, Edit, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 
-export default function RetornoPage() {
+export default function LancamentosSaassPage() {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchRetornos()
+    fetchLancamentosSaass()
   }, [])
 
-  const fetchRetornos = async () => {
+  const fetchLancamentosSaass = async () => {
     try {
       const { data, error } = await supabase
-        .from('retornos_lancamentos')
+        .from('lancamentos_saass')
         .select(`
           *,
-          lancamentos_saass (
-            numero_lancamento,
-            numero_serie_saass
-          )
+          lancamentos(numero_lancamento, descricao),
+          saass(numero_serie_saass, profundidade_metros)
         `)
-        .order('data_hora_retorno', { ascending: false })
+        .order('id_lancamento_saass', { ascending: false })
 
       if (error) throw error
       setItems(data || [])
@@ -36,41 +34,35 @@ export default function RetornoPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este retorno?')) return
+    if (!confirm('Tem certeza que deseja excluir esta associação de lançamento SAASS?')) return
     
     try {
       const { error } = await supabase
-        .from('retornos_lancamentos')
+        .from('lancamentos_saass')
         .delete()
-        .eq('id_retorno_lancamento', id)
+        .eq('id_lancamento_saass', id)
       
       if (error) throw error
-      setItems(prev => prev.filter(item => item.id_retorno_lancamento !== id))
+      setItems(prev => prev.filter(item => item.id_lancamento_saass !== id))
     } catch (error) {
-      console.error('Erro ao excluir retorno:', error)
-      alert('Erro ao excluir. Verifique se não há registros associados.')
+      console.error('Erro ao excluir associação:', error)
+      alert('Erro ao excluir. Verifique se não há entregas ou retornos associados.')
     }
-  }
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleString('pt-BR')
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Retornos</h1>
-          <p className="text-gray-600">Gerencie os retornos do sistema</p>
+          <h1 className="text-3xl font-bold text-gray-900">Lançamentos SAASS</h1>
+          <p className="text-gray-600">Gerencie as associações entre lançamentos e SAASS</p>
         </div>
         <Link
-          href="/retornos/novo"
+          href="/lancamentos-saass/novo"
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
         >
           <Plus className="w-5 h-5 mr-2" />
-          Novo Retorno
+          Nova Associação
         </Link>
       </div>
 
@@ -86,13 +78,10 @@ export default function RetornoPage() {
                     ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Lançamento SAASS
+                    Lançamento
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Responsável
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data/Hora Retorno
+                    SAASS
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -101,38 +90,38 @@ export default function RetornoPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {items.map((item) => (
-                  <tr key={item.id_retorno_lancamento} className="hover:bg-gray-50">
+                  <tr key={item.id_lancamento_saass} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.id_retorno_lancamento}
+                      {item.id_lancamento_saass}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex flex-col">
-                        <span>Lançamento: {item.lancamentos_saass?.numero_lancamento || 'N/A'}</span>
-                        <span className="text-xs text-gray-400">SAASS: {item.lancamentos_saass?.numero_serie_saass || 'N/A'}</span>
+                        <span className="font-medium">L{item.lancamentos?.numero_lancamento}</span>
+                        <span className="text-xs text-gray-400">{item.lancamentos?.descricao || 'Sem descrição'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.responsavel_retorno}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(item.data_hora_retorno)}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{item.saass?.numero_serie_saass}</span>
+                        <span className="text-xs text-gray-400">{item.saass?.profundidade_metros}m de profundidade</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/retornos/${item.id_retorno_lancamento}`}
+                          href={`/lancamentos-saass/${item.id_lancamento_saass}`}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded"
                         >
                           <Eye size={18} />
                         </Link>
                         <Link
-                          href={`/retornos/${item.id_retorno_lancamento}`}
+                          href={`/lancamentos-saass/${item.id_lancamento_saass}`}
                           className="p-2 text-amber-600 hover:bg-amber-50 rounded"
                         >
                           <Edit size={18} />
                         </Link>
                         <button
-                          onClick={() => handleDelete(item.id_retorno_lancamento)}
+                          onClick={() => handleDelete(item.id_lancamento_saass)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded"
                         >
                           <Trash2 size={18} />
@@ -146,7 +135,7 @@ export default function RetornoPage() {
           </div>
           {items.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              Nenhum retorno cadastrado.
+              Nenhuma associação de lançamento SAASS cadastrada.
             </div>
           )}
         </div>

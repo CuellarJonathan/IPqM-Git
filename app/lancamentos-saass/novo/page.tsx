@@ -6,39 +6,50 @@ import { supabase } from '@/lib/supabaseClient'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 
-export default function NewEntregaPage() {
+export default function NewLancamentoSaassPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [lancamentosSaass, setLancamentosSaass] = useState<any[]>([])
+  const [lancamentos, setLancamentos] = useState<any[]>([])
+  const [saass, setSaass] = useState<any[]>([])
   const [formData, setFormData] = useState({
-    id_lancamento_saass: '',
-    responsavel_entrega: '',
-    data_hora_entrega: ''
+    numero_lancamento: '',
+    numero_serie_saass: ''
   })
 
   useEffect(() => {
-    fetchLancamentosSaass()
+    fetchLancamentos()
+    fetchSaass()
   }, [])
 
-  const fetchLancamentosSaass = async () => {
+  const fetchLancamentos = async () => {
     try {
       const { data, error } = await supabase
-        .from('lancamentos_saass')
-        .select(`
-          *,
-          lancamentos(numero_lancamento),
-          saass(numero_serie_saass)
-        `)
-        .order('id_lancamento_saass', { ascending: false })
+        .from('lancamentos')
+        .select('*')
+        .order('numero_lancamento', { ascending: false })
       
       if (error) throw error
-      setLancamentosSaass(data || [])
+      setLancamentos(data || [])
     } catch (error) {
-      console.error('Erro ao buscar lançamentos SAASS:', error)
+      console.error('Erro ao buscar lançamentos:', error)
     }
   }
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const fetchSaass = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('saass')
+        .select('*')
+        .order('numero_serie_saass', { ascending: false })
+      
+      if (error) throw error
+      setSaass(data || [])
+    } catch (error) {
+      console.error('Erro ao buscar SAASS:', error)
+    }
+  }
+
+  const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -48,18 +59,17 @@ export default function NewEntregaPage() {
     setLoading(true)
     try {
       const { error } = await supabase
-        .from('entregas_lancamentos')
+        .from('lancamentos_saass')
         .insert([{
-          id_lancamento_saass: parseInt(formData.id_lancamento_saass),
-          responsavel_entrega: formData.responsavel_entrega,
-          data_hora_entrega: new Date(formData.data_hora_entrega).toISOString()
+          numero_lancamento: parseInt(formData.numero_lancamento),
+          numero_serie_saass: formData.numero_serie_saass
         }])
       if (error) throw error
-      router.push('/entregas')
+      router.push('/lancamentos-saass')
       router.refresh()
     } catch (error) {
       console.error(error)
-      alert('Erro ao salvar. Verifique os dados.')
+      alert('Erro ao salvar. Verifique se esta associação já existe.')
     } finally {
       setLoading(false)
     }
@@ -69,14 +79,14 @@ export default function NewEntregaPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
-          href="/entregas"
+          href="/lancamentos-saass"
           className="p-2 rounded-lg hover:bg-gray-100"
         >
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Nova Entrega</h1>
-          <p className="text-gray-600">Preencha os dados para criar uma nova entrega</p>
+          <h1 className="text-3xl font-bold text-gray-900">Nova Associação</h1>
+          <p className="text-gray-600">Associe um lançamento a um SAASS</p>
         </div>
       </div>
 
@@ -84,55 +94,47 @@ export default function NewEntregaPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Lançamento SAASS
+              Lançamento
             </label>
             <select
-              name="id_lancamento_saass"
+              name="numero_lancamento"
               required
-              value={formData.id_lancamento_saass}
+              value={formData.numero_lancamento}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">Selecione um lançamento SAASS</option>
-              {lancamentosSaass.map((ls) => (
-                <option key={ls.id_lancamento_saass} value={ls.id_lancamento_saass}>
-                  Lançamento {ls.lancamentos?.numero_lancamento} - SAASS {ls.saass?.numero_serie_saass}
+              <option value="">Selecione um lançamento</option>
+              {lancamentos.map((lancamento) => (
+                <option key={lancamento.numero_lancamento} value={lancamento.numero_lancamento}>
+                  L{lancamento.numero_lancamento} - {lancamento.descricao || 'Sem descrição'}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Responsável pela Entrega
+              SAASS
             </label>
-            <input
-              type="text"
-              name="responsavel_entrega"
+            <select
+              name="numero_serie_saass"
               required
-              value={formData.responsavel_entrega}
+              value={formData.numero_serie_saass}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Nome completo do responsável"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data e Hora da Entrega
-            </label>
-            <input
-              type="datetime-local"
-              name="data_hora_entrega"
-              required
-              value={formData.data_hora_entrega}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            >
+              <option value="">Selecione um SAASS</option>
+              {saass.map((saas) => (
+                <option key={saas.numero_serie_saass} value={saas.numero_serie_saass}>
+                  {saas.numero_serie_saass} - {saas.profundidade_metros}m
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         <div className="flex justify-end gap-4 pt-6 border-t">
           <Link
-            href="/entregas"
+            href="/lancamentos-saass"
             className="px-6 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50"
           >
             Cancelar

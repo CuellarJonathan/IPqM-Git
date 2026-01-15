@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState } from 'react'
@@ -10,20 +9,27 @@ import Link from 'next/link'
 export default function NewHidrofonePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({})
+  const [formData, setFormData] = useState({
+    numero_serie_hidrofone: '',
+    versao_hidrofone: '',
+    data_fabricacao: ''
+  })
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
       const { error } = await supabase
         .from('hidrofones')
-        .insert([formData])
+        .insert([{
+          ...formData,
+          data_atualizacao: new Date().toISOString()
+        }])
       if (error) throw error
       router.push('/hidrofones')
       router.refresh()
@@ -38,14 +44,11 @@ export default function NewHidrofonePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link
-          href="/hidrofones"
-          className="p-2 rounded-lg hover:bg-gray-100"
-        >
+        <Link href="/hidrofones" className="p-2 rounded-lg hover:bg-gray-100">
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Novo hidrofone</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Novo Hidrofone</h1>
           <p className="text-gray-600">Preencha os dados para criar um novo hidrofone</p>
         </div>
       </div>
@@ -54,24 +57,26 @@ export default function NewHidrofonePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Número de Série
+              Número de Série do Hidrofone
             </label>
             <input
               type="text"
-              name="numero_serie"
+              name="numero_serie_hidrofone"
               required
+              value={formData.numero_serie_hidrofone}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Versão
+              Versão do Hidrofone
             </label>
             <input
               type="text"
-              name="versao"
+              name="versao_hidrofone"
               required
+              value={formData.versao_hidrofone}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -84,12 +89,11 @@ export default function NewHidrofonePage() {
               type="date"
               name="data_fabricacao"
               required
+              value={formData.data_fabricacao}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          
-          
         </div>
 
         <div className="flex justify-end gap-4 pt-6 border-t">

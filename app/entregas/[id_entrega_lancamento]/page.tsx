@@ -1,14 +1,18 @@
 'use client'
 
 import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 
-export default function NewEntregaPage() {
+export default function EditEntregaPage() {
   const router = useRouter()
+  const params = useParams()
+  const id_entrega_lancamento = parseInt(params.id_entrega_lancamento as string)
+
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [lancamentosSaass, setLancamentosSaass] = useState<any[]>([])
   const [formData, setFormData] = useState({
     id_lancamento_saass: '',
@@ -18,6 +22,7 @@ export default function NewEntregaPage() {
 
   useEffect(() => {
     fetchLancamentosSaass()
+    fetchEntrega()
   }, [])
 
   const fetchLancamentosSaass = async () => {
@@ -38,6 +43,33 @@ export default function NewEntregaPage() {
     }
   }
 
+  const fetchEntrega = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('entregas_lancamentos')
+        .select('*')
+        .eq('id_entrega_lancamento', id_entrega_lancamento)
+        .single()
+      
+      if (error) throw error
+      if (data) {
+        // Converter a data para o formato do input datetime-local
+        const date = new Date(data.data_hora_entrega)
+        const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+        const formattedDate = localDate.toISOString().slice(0, 16)
+        
+        setFormData({
+          id_lancamento_saass: data.id_lancamento_saass.toString(),
+          responsavel_entrega: data.responsavel_entrega,
+          data_hora_entrega: formattedDate
+        })
+      }
+    } catch (error) {
+      console.error(error)
+      alert('Erro ao carregar dados da entrega.')
+    }
+  }
+
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -49,35 +81,68 @@ export default function NewEntregaPage() {
     try {
       const { error } = await supabase
         .from('entregas_lancamentos')
-        .insert([{
+        .update({
           id_lancamento_saass: parseInt(formData.id_lancamento_saass),
           responsavel_entrega: formData.responsavel_entrega,
           data_hora_entrega: new Date(formData.data_hora_entrega).toISOString()
-        }])
+        })
+        .eq('id_entrega_lancamento', id_entrega_lancamento)
+      
       if (error) throw error
       router.push('/entregas')
       router.refresh()
     } catch (error) {
       console.error(error)
-      alert('Erro ao salvar. Verifique os dados.')
+      alert('Erro ao atualizar. Verifique os dados.')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirm('Tem certeza que deseja excluir esta entrega?')) return
+    
+    setDeleting(true)
+    try {
+      const { error } = await supabase
+        .from('entregas_lancamentos')
+        .delete()
+        .eq('id_entrega_lancamento', id_entrega_lancamento)
+      
+      if (error) throw error
+      router.push('/entregas')
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      alert('Erro ao excluir. Verifique se não há registros associados.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/entregas"
-          className="p-2 rounded-lg hover:bg-gray-100"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Nova Entrega</h1>
-          <p className="text-gray-600">Preencha os dados para criar uma nova entrega</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/entregas"
+            className="p-2 rounded-lg hover:bg-gray-100"
+          >
+            <ArrowLeft size={20} />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Editar Entrega</h1>
+            <p className="text-gray-600">Edite os dados da entrega #{id_entrega_lancamento}</p>
+          </div>
         </div>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 disabled:opacity-50"
+        >
+          <Trash2 className="w-5 h-5 mr-2" />
+          {deleting ? 'Excluindo...' : 'Excluir'}
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 space-y-6">

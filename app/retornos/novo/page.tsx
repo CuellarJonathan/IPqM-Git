@@ -1,7 +1,6 @@
-
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { ArrowLeft, Save } from 'lucide-react'
@@ -10,20 +9,51 @@ import Link from 'next/link'
 export default function NewRetornoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({})
+  const [lancamentosSaass, setLancamentosSaass] = useState<any[]>([])
+  const [formData, setFormData] = useState({
+    id_lancamento_saass: '',
+    responsavel_retorno: '',
+    data_hora_retorno: ''
+  })
 
-  const handleChange = (e) => {
+  useEffect(() => {
+    fetchLancamentosSaass()
+  }, [])
+
+  const fetchLancamentosSaass = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('lancamentos_saass')
+        .select(`
+          *,
+          lancamentos(numero_lancamento),
+          saass(numero_serie_saass)
+        `)
+        .order('id_lancamento_saass', { ascending: false })
+      
+      if (error) throw error
+      setLancamentosSaass(data || [])
+    } catch (error) {
+      console.error('Erro ao buscar lançamentos SAASS:', error)
+    }
+  }
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
       const { error } = await supabase
-        .from('retornos')
-        .insert([formData])
+        .from('retornos_lancamentos')
+        .insert([{
+          id_lancamento_saass: parseInt(formData.id_lancamento_saass),
+          responsavel_retorno: formData.responsavel_retorno,
+          data_hora_retorno: new Date(formData.data_hora_retorno).toISOString()
+        }])
       if (error) throw error
       router.push('/retornos')
       router.refresh()
@@ -45,7 +75,7 @@ export default function NewRetornoPage() {
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Novo retorno</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Novo Retorno</h1>
           <p className="text-gray-600">Preencha os dados para criar um novo retorno</p>
         </div>
       </div>
@@ -54,42 +84,50 @@ export default function NewRetornoPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Número de Série
+              Lançamento SAASS
+            </label>
+            <select
+              name="id_lancamento_saass"
+              required
+              value={formData.id_lancamento_saass}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Selecione um lançamento SAASS</option>
+              {lancamentosSaass.map((ls) => (
+                <option key={ls.id_lancamento_saass} value={ls.id_lancamento_saass}>
+                  Lançamento {ls.lancamentos?.numero_lancamento} - SAASS {ls.saass?.numero_serie_saass}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Responsável pelo Retorno
             </label>
             <input
               type="text"
-              name="numero_serie"
+              name="responsavel_retorno"
               required
+              value={formData.responsavel_retorno}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Nome completo do responsável"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Versão
+              Data e Hora do Retorno
             </label>
             <input
-              type="text"
-              name="versao"
+              type="datetime-local"
+              name="data_hora_retorno"
               required
+              value={formData.data_hora_retorno}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data de Fabricação
-            </label>
-            <input
-              type="date"
-              name="data_fabricacao"
-              required
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          
         </div>
 
         <div className="flex justify-end gap-4 pt-6 border-t">
