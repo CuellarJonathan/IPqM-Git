@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { ArrowLeft, Save, Trash2, Plus, Eye, Edit, X } from 'lucide-react'
 import Link from 'next/link'
-import { formatDateShort } from '@/lib/dateUtils';
+import { formatDateShort, formatDateBR } from '@/lib/dateUtils';
 
 
 
@@ -218,13 +218,6 @@ export default function LancamentoDetailPage() {
     }
   }
 
-  
-
-  const formatDateShort = (dateString: string) => {
-    if (!dateString) return 'Nenhuma'
-    const date = new Date(dateString)
-    return formatDateBR(date)
-  }
 
   if (!lancamento) {
     return (
@@ -390,7 +383,7 @@ export default function LancamentoDetailPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.ultima_entrega ? (
-                          <span title={formatDate(item.ultima_entrega)}>
+                          <span title={formatDateBR(item.ultima_entrega)}>
                             {formatDateShort(item.ultima_entrega)}
                           </span>
                         ) : (
@@ -399,7 +392,7 @@ export default function LancamentoDetailPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.ultimo_retorno ? (
-                          <span title={formatDate(item.ultimo_retorno)}>
+                          <span title={formatDateBR(item.ultimo_retorno)}>
                             {formatDateShort(item.ultimo_retorno)}
                           </span>
                         ) : (
