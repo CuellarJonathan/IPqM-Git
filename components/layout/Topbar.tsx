@@ -1,16 +1,32 @@
-import { Bell, Search, User } from 'lucide-react'
+import { Bell, Search, User, Menu, X } from 'lucide-react'
 
-export default function Topbar() {
+interface TopbarProps {
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
+}
+
+export default function Topbar({ sidebarOpen, setSidebarOpen }: TopbarProps) {
   return (
     <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
-      <div className="flex-1 max-w-xl">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="search"
-            placeholder="Buscar componentes, lançamentos..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+      <div className="flex items-center gap-4">
+        {/* Botão Hamburguer para mobile */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+          aria-label="Toggle menu"
+        >
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        
+        <div className="flex-1 max-w-xl">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="search"
+              placeholder="Buscar componentes, lançamentos..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-4">
