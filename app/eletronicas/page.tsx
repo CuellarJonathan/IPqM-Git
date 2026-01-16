@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateBR } from '@/lib/dateUtils';
+
+
 
 export default function EletronicasPage() {
   const [eletronicas, setEletronicas] = useState<any[]>([])
@@ -105,10 +108,10 @@ export default function EletronicasPage() {
                         {eletronica.firmware || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(eletronica.data_fabricacao).toLocaleDateString('pt-BR')}
+                        {formatDateBR(eletronica.data_fabricacao)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {eletronica.data_atualizacao ? new Date(eletronica.data_atualizacao).toLocaleDateString('pt-BR') : 'N/A'}
+                        {eletronica.data_atualizacao ? formatDateBR(eletronica.data_atualizacao) : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link

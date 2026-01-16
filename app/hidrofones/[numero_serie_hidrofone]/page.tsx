@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateBR } from '@/lib/dateUtils';
+
 
 export default function EditHidrofonePage() {
   const router = useRouter()
@@ -166,7 +168,7 @@ export default function EditHidrofonePage() {
             </label>
             <input
               type="text"
-              value={new Date().toLocaleDateString('pt-BR')}
+              value={formatDateBR(new Date().toISOString())}
               disabled
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
             />

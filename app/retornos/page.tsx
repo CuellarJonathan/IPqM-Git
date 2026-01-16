@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Plus, Eye, Edit, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateTimeBR } from '@/lib/dateUtils'
 
 export default function RetornoPage() {
   const [items, setItems] = useState<any[]>([])
@@ -52,11 +53,7 @@ export default function RetornoPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleString('pt-BR')
-  }
+  
 
   return (
     <div className="space-y-6">
@@ -115,7 +112,7 @@ export default function RetornoPage() {
                       {item.responsavel_retorno}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(item.data_hora_retorno)}
+                      {formatDateTimeBR(item.data_hora_retorno)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">

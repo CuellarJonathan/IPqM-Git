@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateBR } from '@/lib/dateUtils';
+
 
 export default function HidrofonesPage() {
   const [hidrofones, setHidrofones] = useState<any[]>([])
@@ -99,10 +101,10 @@ export default function HidrofonesPage() {
                         {hidrofone.versao_hidrofone}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(hidrofone.data_fabricacao).toLocaleDateString('pt-BR')}
+                        {formatDateBR(hidrofone.data_fabricacao)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {hidrofone.data_atualizacao ? new Date(hidrofone.data_atualizacao).toLocaleDateString('pt-BR') : 'N/A'}
+                        {hidrofone.data_atualizacao ? formatDateBR(hidrofone.data_atualizacao) : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link

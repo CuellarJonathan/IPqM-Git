@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateBR } from '@/lib/dateUtils';
+
 
 export default function TubosPage() {
   const [tubos, setTubos] = useState<any[]>([])
@@ -105,10 +107,10 @@ export default function TubosPage() {
                         {tubo.profundidade_metros} m
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(tubo.data_fabricacao).toLocaleDateString('pt-BR')}
+                        {formatDateBR(tubo.data_fabricacao)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {tubo.data_atualizacao ? new Date(tubo.data_atualizacao).toLocaleDateString('pt-BR') : 'N/A'}
+                        {tubo.data_atualizacao ? formatDateBR(tubo.data_atualizacao) : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateBR } from '@/lib/dateUtils';
+
 
 export default function PacksBateriasPage() {
   const [packsBaterias, setPacksBaterias] = useState<any[]>([])
@@ -99,10 +101,10 @@ export default function PacksBateriasPage() {
                         {pack.versao_pack_baterias}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(pack.data_fabricacao).toLocaleDateString('pt-BR')}
+                        {formatDateBR(pack.data_fabricacao)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {pack.data_atualizacao ? new Date(pack.data_atualizacao).toLocaleDateString('pt-BR') : 'N/A'}
+                        {pack.data_atualizacao ? formatDateBR(pack.data_atualizacao) : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link

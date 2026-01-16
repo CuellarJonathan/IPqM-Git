@@ -5,6 +5,9 @@ import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { ArrowLeft, Save, Trash2, Plus, Eye, Edit, X } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateShort } from '@/lib/dateUtils';
+
+
 
 export default function LancamentoDetailPage() {
   const router = useRouter()
@@ -56,19 +59,35 @@ export default function LancamentoDetailPage() {
         .select(`
           *,
           saass(*),
-          entregas_lancamentos(data_hora_entrega),
-          retornos_lancamentos(data_hora_retorno)
+          entregas_lancamentos!left(data_hora_entrega),
+          retornos_lancamentos!left(data_hora_retorno)
         `)
         .eq('numero_lancamento', numero_lancamento)
       
       if (error) throw error
       
-      // Processar dados para obter últimas entregas e retornos
-      const processedData = data?.map(item => ({
-        ...item,
-        ultima_entrega: item.entregas_lancamentos?.[0]?.data_hora_entrega || null,
-        ultimo_retorno: item.retornos_lancamentos?.[0]?.data_hora_retorno || null
-      })) || []
+      // Processar dados para obter últimas entregas e retornos (mais recentes)
+      const processedData = data?.map(item => {
+        // Ordenar entregas por data (mais recente primeiro) e pegar a primeira
+        const entregasOrdenadas = item.entregas_lancamentos
+          ?.filter((e: any) => e.data_hora_entrega)
+          ?.sort((a: any, b: any) => 
+            new Date(b.data_hora_entrega).getTime() - new Date(a.data_hora_entrega).getTime()
+          ) || []
+        
+        // Ordenar retornos por data (mais recente primeiro) e pegar a primeira
+        const retornosOrdenados = item.retornos_lancamentos
+          ?.filter((r: any) => r.data_hora_retorno)
+          ?.sort((a: any, b: any) => 
+            new Date(b.data_hora_retorno).getTime() - new Date(a.data_hora_retorno).getTime()
+          ) || []
+        
+        return {
+          ...item,
+          ultima_entrega: entregasOrdenadas[0]?.data_hora_entrega || null,
+          ultimo_retorno: retornosOrdenados[0]?.data_hora_retorno || null
+        }
+      }) || []
       
       setSaassAssociados(processedData)
     } catch (error) {
@@ -199,10 +218,12 @@ export default function LancamentoDetailPage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
+  
+
+  const formatDateShort = (dateString: string) => {
     if (!dateString) return 'Nenhuma'
     const date = new Date(dateString)
-    return date.toLocaleString('pt-BR')
+    return formatDateBR(date)
   }
 
   if (!lancamento) {
@@ -368,10 +389,22 @@ export default function LancamentoDetailPage() {
                         {item.saass?.profundidade_metros}m
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(item.ultima_entrega)}
+                        {item.ultima_entrega ? (
+                          <span title={formatDate(item.ultima_entrega)}>
+                            {formatDateShort(item.ultima_entrega)}
+                          </span>
+                        ) : (
+                          'Nenhuma'
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(item.ultimo_retorno)}
+                        {item.ultimo_retorno ? (
+                          <span title={formatDate(item.ultimo_retorno)}>
+                            {formatDateShort(item.ultimo_retorno)}
+                          </span>
+                        ) : (
+                          'Nenhum'
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">

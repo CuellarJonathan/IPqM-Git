@@ -22,7 +22,8 @@ export default function NewRetornoPage() {
 
   const fetchLancamentosSaass = async () => {
     try {
-      const { data, error } = await supabase
+      // Buscar todos os lançamentos SAASS
+      const { data: allLancamentosSaass, error: error1 } = await supabase
         .from('lancamentos_saass')
         .select(`
           *,
@@ -31,8 +32,24 @@ export default function NewRetornoPage() {
         `)
         .order('id_lancamento_saass', { ascending: false })
       
-      if (error) throw error
-      setLancamentosSaass(data || [])
+      if (error1) throw error1
+      
+      // Buscar lançamentos SAASS que já têm retornos registrados
+      const { data: retornosRegistrados, error: error2 } = await supabase
+        .from('retornos_lancamentos')
+        .select('id_lancamento_saass')
+      
+      if (error2) throw error2
+      
+      // Criar conjunto de IDs que já têm retorno
+      const idsComRetorno = new Set(retornosRegistrados?.map(r => r.id_lancamento_saass) || [])
+      
+      // Filtrar apenas lançamentos SAASS que ainda não têm retorno
+      const lancamentosSemRetorno = allLancamentosSaass?.filter(
+        ls => !idsComRetorno.has(ls.id_lancamento_saass)
+      ) || []
+      
+      setLancamentosSaass(lancamentosSemRetorno)
     } catch (error) {
       console.error('Erro ao buscar lançamentos SAASS:', error)
     }

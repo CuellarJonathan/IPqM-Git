@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { Plus, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
+import { formatDateBR } from '@/lib/dateUtils';
+
 
 export default function SAASSPage() {
   const [saass, setSaass] = useState<any[]>([])
@@ -123,10 +125,10 @@ export default function SAASSPage() {
                         {saas.profundidade_metros} m
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(saas.data_fabricacao).toLocaleDateString('pt-BR')}
+                        {formatDateBR(saas.data_fabricacao)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {saas.data_atualizacao ? new Date(saas.data_atualizacao).toLocaleDateString('pt-BR') : 'N/A'}
+                        {saas.data_atualizacao ? formatDateBR(saas.data_atualizacao) : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link

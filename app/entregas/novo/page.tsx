@@ -22,7 +22,8 @@ export default function NewEntregaPage() {
 
   const fetchLancamentosSaass = async () => {
     try {
-      const { data, error } = await supabase
+      // Buscar todos os lançamentos SAASS
+      const { data: allLancamentosSaass, error: error1 } = await supabase
         .from('lancamentos_saass')
         .select(`
           *,
@@ -31,8 +32,24 @@ export default function NewEntregaPage() {
         `)
         .order('id_lancamento_saass', { ascending: false })
       
-      if (error) throw error
-      setLancamentosSaass(data || [])
+      if (error1) throw error1
+      
+      // Buscar lançamentos SAASS que já têm entregas registradas
+      const { data: entregasRegistradas, error: error2 } = await supabase
+        .from('entregas_lancamentos')
+        .select('id_lancamento_saass')
+      
+      if (error2) throw error2
+      
+      // Criar conjunto de IDs que já têm entrega
+      const idsComEntrega = new Set(entregasRegistradas?.map(e => e.id_lancamento_saass) || [])
+      
+      // Filtrar apenas lançamentos SAASS que ainda não têm entrega
+      const lancamentosSemEntrega = allLancamentosSaass?.filter(
+        ls => !idsComEntrega.has(ls.id_lancamento_saass)
+      ) || []
+      
+      setLancamentosSaass(lancamentosSemEntrega)
     } catch (error) {
       console.error('Erro ao buscar lançamentos SAASS:', error)
     }

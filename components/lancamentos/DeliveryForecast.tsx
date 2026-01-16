@@ -1,14 +1,18 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 import { Calendar, Info } from 'lucide-react'
 
-// Função para gerar previsões (mockada)
-function generateForecasts() {
-  const lastDelivery = new Date('2026-01-12') // Última entrega conhecida
+// Função para gerar previsões baseadas na última entrega real
+function generateForecasts(lastDeliveryDate: Date | null) {
   const forecasts = []
   const daysBetween = 60 // Dias entre entregas
   const oneYearFromNow = new Date()
   oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
 
-  let currentDate = new Date(lastDelivery)
+  // Se não houver última entrega, usar data atual como referência
+  let currentDate = lastDeliveryDate ? new Date(lastDeliveryDate) : new Date()
   let forecastNumber = 1
 
   while (currentDate < oneYearFromNow) {
@@ -26,9 +30,44 @@ function generateForecasts() {
   return forecasts
 }
 
-const forecasts = generateForecasts()
-
 export default function DeliveryForecast() {
+  const [forecasts, setForecasts] = useState<any[]>([])
+  const [lastDelivery, setLastDelivery] = useState<Date | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchLastDelivery()
+  }, [])
+
+  const fetchLastDelivery = async () => {
+    try {
+      // Buscar a última entrega registrada no sistema
+      const { data, error } = await supabase
+        .from('entregas_lancamentos')
+        .select('data_hora_entrega')
+        .order('data_hora_entrega', { ascending: false })
+        .limit(1)
+      
+      if (error) throw error
+
+      const lastDeliveryDate = data?.[0]?.data_hora_entrega 
+        ? new Date(data[0].data_hora_entrega)
+        : null
+      
+      setLastDelivery(lastDeliveryDate)
+      
+      // Gerar previsões baseadas na última entrega
+      const generatedForecasts = generateForecasts(lastDeliveryDate)
+      setForecasts(generatedForecasts)
+    } catch (error) {
+      console.error('Erro ao buscar última entrega:', error)
+      // Se houver erro, gerar previsões com data atual
+      const generatedForecasts = generateForecasts(null)
+      setForecasts(generatedForecasts)
+    } finally {
+      setLoading(false)
+    }
+  }
   return (
     <div className="bg-white rounded-xl shadow p-6">
       <div className="flex items-center justify-between mb-6">
@@ -101,12 +140,31 @@ export default function DeliveryForecast() {
         </table>
       </div>
 
-      <div className="mt-6 pt-6 border-t">
-        <div className="text-sm text-gray-500">
-          <p><strong>Nota:</strong> Esta previsão é baseada na última entrega registrada (12/01/2026) e assume um intervalo fixo de 60 dias entre entregas. As datas são estimativas e podem ser ajustadas conforme a operação real.</p>
-          <p className="mt-2">Última entrega considerada: 12/01/2026</p>
+      {loading ? (
+        <div className="mt-6 pt-6 border-t">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="mt-6 pt-6 border-t">
+          <div className="text-sm text-gray-500">
+            <p><strong>Nota:</strong> Esta previsão é baseada na última entrega registrada e assume um intervalo fixo de 60 dias entre entregas. As datas são estimativas e podem ser ajustadas conforme a operação real.</p>
+            <p className="mt-2">
+              Última entrega considerada: {
+                lastDelivery 
+                  ? lastDelivery.toLocaleDateString('pt-BR', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric' 
+                    })
+                  : 'Nenhuma entrega registrada (usando data atual como referência)'
+              }
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
